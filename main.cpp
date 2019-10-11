@@ -25,10 +25,12 @@ class Game
             name = iname;
             money = imoney;
         }
-        int GetMoney(){
+        int GetMoney()
+        {
             return money;
         }
-        void ChangeMoney(int addmoney){
+        void ChangeMoney(int addmoney)
+        {
              money += addmoney;
         }
     };
@@ -61,15 +63,18 @@ class Game
             money = 0;
         }
         
-        void ChangeMoney(int addmoney){
+        void ChangeMoney(int addmoney)
+        {
             money += addmoney;
         }
         
-        int GetMoney(){
+        int GetMoney()
+        {
             return money;
         }
         
-        void SetMoney(int in){
+        void SetMoney(int in)
+        {
             money = in;
         }
     };
@@ -86,21 +91,32 @@ class Game
     Base target;
     Bank gameBank;
     
-    void NewPlayer(string name, int money){
+    void NewPlayer(string name, int money)
+    {
         players.push_back(Player(name, money));
     }
-    
-    void ShowPlayers(){
+    void ShowPlayers()
+    {
         cout << "Счет игроков:" << endl;
-        for (int i = 0; i<players.size();i++){
+        for (int i = 0; i<players.size();i++)
+        {
             cout << players[i].name << " " << players[i].GetMoney() << endl;
         }
     }
 
-    string GetName(int i){
+    string GetName(int i)
+    {
         return players[i].name;
     }
     
+    double ThrowBall(double alpha, double speed){
+        
+        double landed = 2*speed*sin(2*alpha)/9.8;
+        
+        cout << "Мяч упал: " <<landed << endl;
+        return landed;
+    }
+
     int NextTurn(int* cycle){
         
         double alpha;
@@ -129,18 +145,24 @@ class Game
         for (int i = 0; i<players.size(); i++)
         {
             cout<<"Ставка игрока " << players[i].name << " (на счету " << players[i].GetMoney()<< "):"<< endl;
+            
             cin >> readline;
             bet = stoi(readline);
             
-            if (bet <= players[i].GetMoney() && bet>0){
+            if (bet <= players[i].GetMoney() && bet>0)
+            {
                 players[i].ChangeMoney(-bet);
                 gameBank.ChangeMoney(bet);
             }
-            else{
+            else
+            {
                 i--;
             }
+            
         }
+        
     }
+
 };
 
 using namespace std;
@@ -152,27 +174,35 @@ int main ()
     string readline = "y";
     bool GameIsOn = false;
     
-    while (!GameIsOn){
-        if (readline=="y"){
+    while (!GameIsOn)
+    {
+        
+        if (readline=="y")
+        {
             string iname;
             int imoney;
             
             cout << "Login: ";
             cin >> iname;
             
+            
             cout << "Money: ";
             cin >> readline;
             imoney = stoi(readline);
             
             MyGame.NewPlayer(iname, imoney);
-      
+            
+            
             cout << "Добавить игрока? \"y\" - да." << endl;
-            cin >> readline;     
+            cin >> readline;
+            
         }
-        else{
+        else
+        {
             GameIsOn = true;
             MyGame.ShowPlayers();
         }
+        
     }
     
     MyGame.SetBets();
@@ -181,6 +211,7 @@ int main ()
     
     while (1)
     {
+        
         int turncycle = 0;
         MyGame.target.Show();
         int winner = MyGame.NextTurn(&turncycle);
@@ -202,5 +233,6 @@ int main ()
     }
     cout << "Игра завершена." << endl;
     MyGame.ShowPlayers();
+    
 }
 
