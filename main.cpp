@@ -3,138 +3,184 @@
 #include <string>
 #include <vector>
 #include <ctime>
-#include <cstdlib>
 #include <cmath>
 
 // 1 - Регистрируется игрок на игру и вносит сумму в банк.
-// 2 - В процессе кона в следующее место размещается база шириной W.
-// 3 - Игрок бросает биту под углом Alpha и скоростью V. Масса и сила притяжения - константы. Если попал в базу - выиграл.
+// 2 - В процессе кона в размещается база шириной W.
 
 // Классы: Игрок, банк, игра, база, шар.
 
 using namespace std;
 
-class Game
+double GetRand(double start, double end){
+    if (end < start)
+    {
+        cerr<<"Ошибка в диапазоне случайных значений.";
+        return 0;
+    }
+    srand(rand());
+    return (start + (rand() % (int)(end-start)));
+}
+
+class Player
 {
-    class Player
-    {
-        int money;
-        public:
-        string name;
-        Player(string iname, int imoney){
-            name = iname;
-            money = imoney;
-        }
-        int GetMoney()
-        {
-            return money;
-        }
-        void ChangeMoney(int addmoney)
-        {
-             money += addmoney;
-        }
-    };
+    int behavior; //0 - игрок, 1,2,3 - боты различной сложности
+    int money;
+    string name;
     
-    class Base
-    {
-        public:
-        double x;
-        double w;
-        
     public:
-        void Randomize(){
-            srand((unsigned int)time(NULL));
-            x = rand() % 100;
-            w = 5 + rand() % 5;
-            cout << "Координаты базы: "<< x << " Ширина: " << w << endl;
-        }
-        void Show(){
-            cout << "Координаты базы: "<< x << " Ширина: " << w << endl;
-        }
-    };
+    Player(string iname, int imoney){
+        name = iname;
+        money = imoney;
+        behavior = 0;
+    }
+    Player(string iname, int imoney, int ibehavior){
+        name = iname;
+        money = imoney;
+        behavior = ibehavior;
+    }
+    int GetMoney(){
+        return money;
+    }
+    string GetName(){
+        return name;
+    }
+    int GetBehavior(){
+        return behavior;
+    }
+    void AddMoney(int addmoney){
+         money += addmoney;
+    }
+};
+
+class Base
+{
+    protected:
+    double x; // Координата цели.
+    double w; // Ширина цели.
     
-    class Bank
-    {
-        int money;
-        
-        public:
-        
-        Bank(){
-            money = 0;
-        }
-        
-        void ChangeMoney(int addmoney)
-        {
+    public:
+    void Randomize(){
+        x = GetRand(0,100);
+        w = GetRand(5,15);
+    }
+    void Show(){
+        cout << "Координаты базы: "<< x << " Ширина: " << w << endl;
+    }
+    double GetX(){
+        return x;
+    }
+    double GetW(){
+        return w;
+    }
+};
+
+class Bank
+{
+    protected:
+        int money = 0;
+    
+    public:
+    
+        void AddMoney(int addmoney){
             money += addmoney;
         }
-        
-        int GetMoney()
-        {
+
+        int GetMoney(){
             return money;
         }
-        
-        void SetMoney(int in)
-        {
-            money = in;
+
+        void SetMoney(int imoney){
+            money = imoney;
         }
-    };
-    
+
+        void Show(){
+            cout << "В банке: "<< GetMoney()<<endl;
+        }
+};
+
+class Game
+{
+    protected:
+    bool isActive; // Идет ли игра?
+    vector<Player> players; // Массив игроков.
     
     public:
-    
-    Game(){
-        target.Randomize();
-    }
-    
-    vector<Player> players;
-    
-    Base target;
-    Bank gameBank;
+    Base target; // Цель.
+    Bank gameBank; // Банк.
     
     void NewPlayer(string name, int money)
     {
         players.push_back(Player(name, money));
     }
-    void ShowPlayers()
+    
+    void NewPlayer(string name, int money, int ibehavior)
+    {
+        players.push_back(Player(name, money, ibehavior));
+    }
+    
+    void ShowBank()
     {
         cout << "Счет игроков:" << endl;
         for (int i = 0; i<players.size();i++)
         {
-            cout << players[i].name << " " << players[i].GetMoney() << endl;
+            cout << players[i].GetName() << " " << players[i].GetMoney() << endl;
         }
     }
 
     string GetName(int i)
     {
-        return players[i].name;
+        return players[i].GetName();
     }
     
     double ThrowBall(double alpha, double speed){
         
-        double landed = 2*speed*sin(2*alpha)/9.8;
-        
+        double landed = 2*speed*sin(2*alpha/57.2958)/9.8;
         cout << "Мяч упал: " <<landed << endl;
         return landed;
     }
     
     int NextTurn(int* cycle){
         
-        double alpha;
-        double speed;
+        double alpha, speed, landed = 0;
         
-        cout << "Ход игрока: " << players[*cycle].name << endl;
-        cout << "Введите угол: ";
-        cin >> alpha;
-        alpha = (double)alpha;
-        cout << "Введите скорость: ";
-        cin >> speed;
-        speed = (double)speed;
-        double landed = ThrowBall(alpha, speed);
-        if (landed > target.x && landed < target.x + target.w) return *cycle+1;
+        cout << "Ход игрока: " << players[*cycle].GetName() << endl;
+        
+        switch (players[*cycle].GetBehavior())
+        {
+            case 1:
+                speed = GetRand(0,1000);
+                alpha = GetRand(1,89);
+                break;
+            case 2:
+                speed = (target.GetX()+target.GetW()/2)*4.9+GetRand(-200,200);
+                alpha = 45+GetRand(-20,20);
+                break;
+            case 3:
+                speed = (target.GetX()+target.GetW()/2)*4.9+GetRand(-150,150);
+                alpha = 45+GetRand(-15,15);
+                break;
+            default:
+                cout << "Введите угол: ";
+                cin >> alpha;
+                alpha = (double)alpha;
+                cout << "Введите скорость: ";
+                cin >> speed;
+                speed = (double)speed;
+                break;
+                
+        }
+        
+        landed = ThrowBall(alpha, speed);
+        if (landed > target.GetX() && landed < target.GetX() + target.GetW()) return *cycle+1;
             
         *cycle = (*cycle + 1) % players.size();
             
         return 0;
+    }
+    
+    int GetPlayerCount(){
+        return (int)players.size();
     }
     
     void SetBets(){
@@ -144,95 +190,132 @@ class Game
         
         for (int i = 0; i<players.size(); i++)
         {
-            cout<<"Ставка игрока " << players[i].name << " (на счету " << players[i].GetMoney()<< "):"<< endl;
+            cout<<"Ставка игрока " << players[i].GetName() << " (на счету " << players[i].GetMoney()<< "): ";
             
             cin >> readline;
             bet = stoi(readline);
             
             if (bet <= players[i].GetMoney() && bet>0)
             {
-                players[i].ChangeMoney(-bet);
-                gameBank.ChangeMoney(bet);
+                players[i].AddMoney(-bet);
+                gameBank.AddMoney(bet);
             }
             else
             {
                 i--;
             }
+        }
+    }
+    
+    void RegisterPlayers(){
+        
+        string cin_buffer;
+        
+        while (!isActive)
+        {
+            cout << "Добавить игрока? \"y\" для добавления игрока. \"b\" для добавления бота. "<<endl<<"Добавить игрока: ";
+            cin >> cin_buffer;
+            
+            if (cin_buffer=="y"){
+                string iname;
+                int imoney;
+                
+                cout << "Введите логин: ";
+                cin >> iname;
+                
+                cout << "Деньги на счете: ";
+                cin >> cin_buffer;
+                imoney = stoi(cin_buffer);
+                
+                NewPlayer(iname, imoney);
+                
+            }
+            else if (cin_buffer=="b"){
+                string difficulty_name;
+                int difficulty;
+                string iname;
+                int imoney;
+                cout<<"Выберите сложность бота:"
+                        <<endl<<"\"1\"-Легкий."
+                        <<endl<<"\"2\"-Средний."
+                        <<endl<<"\"3\"-Сложный."
+                        <<endl<<"Cложность бота: ";
+                cin >> cin_buffer;
+                difficulty = stoi(cin_buffer);
+                switch (difficulty)
+                {
+                    case 1:
+                        difficulty_name = "Easy";
+                        break;
+                    case 2:
+                        difficulty_name = "Normal";
+                        break;
+                    case 3:
+                        difficulty_name = "Hard";
+                        break;
+                    default:
+                        difficulty_name = "Easy";
+                        difficulty = 0;
+                        break;
+                }
+                
+                cout << "Введите имя бота: ";
+                cin >> iname;
+                
+                cout << "Деньги на счете: ";
+                cin >> cin_buffer;
+                imoney = stoi(cin_buffer);
+                
+                NewPlayer("["+difficulty_name+" Bot] "+iname, imoney, difficulty);
+            }
+            else
+            {
+                isActive = true;
+                ShowBank();
+            }
             
         }
-        
     }
-
+    
+    void Play()
+    {
+        string cin_buffer;
+        target.Randomize();
+        cout<< "Игра началась!"<<endl;
+        while (1)
+        {
+            static int turncycle = 0;
+            target.Show();
+            int winner = NextTurn(&turncycle);
+            if (winner)
+            {
+                cout << GetName(winner-1) << " выиграл " << gameBank.GetMoney() << endl;
+                players[winner-1].AddMoney(gameBank.GetMoney());
+                gameBank.SetMoney(0);
+                ShowBank();
+                
+                cout << "Завершить игру? \"y\" - да." << endl;
+                cin >> cin_buffer;
+                if (cin_buffer == "y") break;
+                SetBets();
+                target.Randomize();
+                ShowBank();
+                turncycle = 0;
+                cout<< "Игра началась!"<<endl;
+            }
+        }
+        cout << "Игра завершена." << endl;
+        ShowBank();
+    }
+    
 };
-
-using namespace std;
 
 int main ()
 {
     Game MyGame;
     
-    string readline = "y";
-    bool GameIsOn = false;
-    
-    while (!GameIsOn)
-    {
-        
-        if (readline=="y")
-        {
-            string iname;
-            int imoney;
-            
-            cout << "Login: ";
-            cin >> iname;
-            
-            
-            cout << "Money: ";
-            cin >> readline;
-            imoney = stoi(readline);
-            
-            MyGame.NewPlayer(iname, imoney);
-            
-            
-            cout << "Добавить игрока? \"y\" - да." << endl;
-            cin >> readline;
-            
-        }
-        else
-        {
-            GameIsOn = true;
-            MyGame.ShowPlayers();
-        }
-        
-    }
-    
+    MyGame.RegisterPlayers();
     MyGame.SetBets();
-    cout << "В банке: "<< MyGame.gameBank.GetMoney()<<endl;
-    cout<< "Игра началась!"<<endl;
-    
-    while (1)
-    {
-        
-        int turncycle = 0;
-        MyGame.target.Show();
-        int winner = MyGame.NextTurn(&turncycle);
-        if (winner)
-        {
-            cout << MyGame.GetName(winner-1) << " выиграл " << MyGame.gameBank.GetMoney() << endl;
-            MyGame.players[winner-1].ChangeMoney(MyGame.gameBank.GetMoney());
-            MyGame.gameBank.SetMoney(0);
-            MyGame.ShowPlayers();
-            
-            cout << "Завершить игру? \"y\" - да." << endl;
-            cin >> readline;
-            if (readline == "y") break;
-            MyGame.SetBets();
-            MyGame.target.Randomize();
-            cout << "В банке: "<< MyGame.gameBank.GetMoney()<<endl;
-            cout<< "Игра началась!"<<endl;
-        }
-    }
-    cout << "Игра завершена." << endl;
-    MyGame.ShowPlayers();
+    MyGame.Play();
     
 }
-
