@@ -140,7 +140,7 @@ class Game
         cout << "Мяч упал: " <<landed << endl;
         return landed;
     }
-    
+
     int NextTurn(int* cycle){
         
         double alpha, speed, landed = 0;
